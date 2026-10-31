@@ -1,0 +1,71 @@
+# Desert Air Heating & Cooling — WordPress marketing site.
+#
+#   docker compose up -d       ->  http://localhost:8088   (admin: /wp-admin, admin / admin)
+#                                  http://localhost:8025   (Mailpit: catches contact-form emails)
+#
+# The `setup` service installs WordPress, activates the theme and creates pages/menus on first run.
+name: marketing-site-wordpress
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - hvac-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 30
+
+  wordpress:
+    image: wordpress:6.8-php8.3-apache
+    ports:
+      - "8088:80"
+    environment: &wp-env
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', getenv('WP_HOME') ?: 'http://localhost:8088');
+        define('WP_SITEURL', getenv('WP_HOME') ?: 'http://localhost:8088');
+        define('DESERT_AIR_SMTP_HOST', getenv('SMTP_HOST') ?: 'mailpit');
+        define('DESERT_AIR_SMTP_PORT', getenv('SMTP_PORT') ?: 1025);
+    volumes: &wp-volumes
+      - hvac-wp:/var/www/html
+      - ./wp-content/themes/desert-air:/var/www/html/wp-content/themes/desert-air
+    depends_on:
+      db:
+        condition: service_healthy
+
+  setup:
+    image: wordpress:cli-2.12-php8.3
+    user: "33:33"
+    environment:
+      <<: *wp-env
+      SITE_URL: http://localhost:8088
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin
+      ADMIN_EMAIL: admin@desertair.example
+    volumes:
+      - hvac-wp:/var/www/html
+      - ./wp-content/themes/desert-air:/var/www/html/wp-content/themes/desert-air
+      - ./setup/setup.sh:/setup.sh:ro
+    entrypoint: ["sh", "/setup.sh"]
+    depends_on:
+      wordpress:
+        condition: service_started
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"
+
+volumes:
+  hvac-db:
+  hvac-wp:

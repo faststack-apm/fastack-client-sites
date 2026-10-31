@@ -1,0 +1,27 @@
+{
+  "name": "example-commerce-ui-react",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Vegas Clubwear storefront — React SPA that talks to either commerce API over REST",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:java": "VITE_API_PROXY_TARGET=http://localhost:8080 vite",
+    "dev:next": "VITE_API_PROXY_TARGET=http://localhost:3001 vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "7.18.5"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  }
+}

@@ -1,0 +1,83 @@
+# ---------------------------------------------------------------
+# Root .gitignore for the monorepo. Subprojects may add their own.
+# ---------------------------------------------------------------
+
+# ---------- Node / JS / TS (api-next, ui-react, tools) ----------
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+*.tsbuildinfo
+.eslintcache
+.npm/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+.vercel/
+
+# Vite / React build output
+dist/
+dist-ssr/
+*.local
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# ---------- Java / Maven (api-java) ----------
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+*.class
+hs_err_pid*.log
+replay_pid*.log
+HELP.md
+
+# Gradle (in case any project switches)
+.gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ---------- Environment / secrets ----------
+.env
+.env.*
+!.env.example
+
+# ---------- IDEs / editors ----------
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+!.vscode/extensions.json
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+/nbproject/private/
+*.swp
+*~
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Logs ----------
+logs/
+*.log

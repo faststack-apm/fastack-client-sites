@@ -1,0 +1,75 @@
+# Vegas Clubwear + Desert Air demo client sites.
+#
+#   docker compose up -d --build                  # everything
+#   docker compose up -d postgres commerce-api-java commerce-ui-java      # Java stack only
+#   docker compose up -d postgres commerce-api-next commerce-ui-next      # Next stack only
+#   docker compose up -d wordpress setup mailpit                     # WordPress only
+#
+# Ports:  storefront->Java 5173 | storefront->Next 5174 | Java API 8080 | Next API 3001 | WordPress 8088 | Mailpit 8025 | Postgres 5432
+name: fastack-client-sites
+
+# WordPress HVAC site services: db, wordpress, setup, mailpit
+include:
+  - ./marketing-site-wordpress/docker-compose.yml
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: commerce
+      POSTGRES_PASSWORD: commerce
+      POSTGRES_DB: commerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - commerce-pg:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commerce"]
+      interval: 5s
+      retries: 20
+
+  commerce-api-java:
+    build: ./example-commerce-api-java
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/commerce_java
+      DB_USER: commerce
+      DB_PASSWORD: commerce
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:5174
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  commerce-api-next:
+    build: ./example-commerce-api-next
+    environment:
+      DATABASE_URL: postgres://commerce:commerce@postgres:5432/commerce_next
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # The same React build served twice, each instance proxying /api to a different backend.
+  commerce-ui-java:
+    build: ./example-commerce-ui-react
+    environment:
+      API_UPSTREAM: http://commerce-api-java:8080
+    ports:
+      - "5173:80"
+    depends_on:
+      - commerce-api-java
+
+  commerce-ui-next:
+    build: ./example-commerce-ui-react
+    environment:
+      API_UPSTREAM: http://commerce-api-next:3001
+    ports:
+      - "5174:80"
+    depends_on:
+      - commerce-api-next
+
+volumes:
+  commerce-pg:
